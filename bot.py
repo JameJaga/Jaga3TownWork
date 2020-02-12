@@ -1,19 +1,16 @@
 import discord
-import os
-
-TOKEN = os.environ.get("DISCORD_TOKEN")
+import asyncio
 
 client = discord.Client()
+category_missed_id = 677069135946973204
+category_successed_id = 677069170260574219
 
 @client.event
-async def on_ready():
-    print('We have logged in as {0.user}'.format(client))
+async def on_message(message):
+    if message.author.bot:
+        return
 
-@client.event
-async def on_message(message):    
-  
-#権限申請のプログラム
-        if message.content.startswith('/am-apply'):
+    if message.content == '/am-apply':
         member = message.author
         role = discord.utils.find(lambda r: r.name == 'applied', member.guild.roles)
         await member.add_roles(role)
@@ -27,46 +24,81 @@ async def on_message(message):
         send_msg = await channel_qa.send(embed=embed)
         await send_msg.add_reaction('🅰')
         await send_msg.add_reaction('🅱')
-        @client.event
-        async def on_raw_reaction_add(payload):
-            if payload.member.bot == False:
-                if str(payload.emoji) == '🅰':
-                    applyrole = 'Admin'
-                if str(payload.emoji) == '🅱':
-                    applyrole = 'Assistant'
-                embed = discord.Embed(title="PlzWrite",description = f'申請ランクは{str(applyrole)}\n次に運営としてやりたいことを１メッセージで入力してください。',color=discord.Colour.from_rgb(0, 255, 255))
-                send_msg = await channel_qa.send(embed=embed)
-                @client.event
-                async def on_message(message):
-                    if message.author.bot:
-                        return
+        
+    def react_check(reaction,user):
+        emoji = str(reaction.emoji)
+        if reaction.message.id != send_msg.id:
+            return 0
+        if user.bot:
+            return 0
+        else:
+            return emoji,user
+
+    while not client.is_closed():
+        try:
+            reaction,user = await client.wait_for('reaction_add',check=react_check,timeout=7200.0)
+        except asyncio.TimeoutError:
+            await message.channel.send('時間切れ')
+            return
+        else:
+            emoji = str(reaction.emoji)
+            if emoji == "🅰":
+                applyrole = 'Admin'
+            if emoji == "🅱":
+                applyrole = 'Assistant'
+            embed = discord.Embed(title="PlzWrite",description = f'申請ランクは{str(applyrole)}\n次に運営としてやりたいことを１メッセージで入力してください。',color=discord.Colour.from_rgb(0, 255, 255))
+            send_msg = await channel_qa.send(embed=embed)
+
+            def check(msg):
+                if message.author != msg.author:
+                    return 0
+                else:
+                    return 1
+            while not client.is_closed():
+                try:
+                    reaction,user = await client.wait_for('message',check=message,timeout=7200.0)
+                except asyncio.TimeoutError:
+                    await message.channel.send('時間切れ')
+                    return
+                else:
                     reason = message.content
                     embed = discord.Embed(title="FinalCheck",description = f'以上の内容で申請確定してもよろしいですか？',color=discord.Colour.from_rgb(0, 255, 255))
                     send_msg = await channel_qa.send(embed=embed)
                     await send_msg.add_reaction('✅')
                     await send_msg.add_reaction('❎')
-                    @client.event
-                    async def on_raw_reaction_add(payload):
-                        if payload.member.bot == False:
-                            if str(payload.emoji) == '✅':
+                    def react_check(reaction,user):
+                        emoji = str(reaction.emoji)
+                        if reaction.message.id != send_msg.id:
+                            return 0
+                        if user.bot:
+                            return 0
+                        else:
+                            return emoji,user
+                    while not client.is_closed():
+                        try:
+                            reaction,user = await client.wait_for('reaction_add',check=react_check,timeout=7200.0)
+                        except asyncio.TimeoutError:
+                            await message.channel.send('時間切れ')
+                            return
+                        else:
+                            emoji = str(reaction.emoji)
+                            if emoji == "✅":
                                 await channel_qa.send(f'申請が完了しました。人事権を持つ運営の返答をお待ちください。')
                                 await message.channel.purge()
                                 humanresource = discord.utils.find(lambda r: r.name == '人事課',member.guild.roles)
                                 await channel_qa.send(f'For {humanresource.mention}')
                                 embed = discord.Embed(title="ApplyComplete",description = f'志望者→{member}\n希望役職→{applyrole}\n志望動機→{reason}',color=discord.Colour.from_rgb(0, 255, 255))
                                 send_msg = await channel_qa.send(embed=embed)
-                                role = discord.utils.find(lambda r: r.name == 'applying', member.guild.roles)
+                                role = discord.utils.find(lambda r: r.name == 'applied', member.guild.roles)
                                 await member.remove_roles(role)
-                                return
-
-
-                            if str(payload.emoji) == '❎':
-                                await channel_qa.send(f'/ap-deleteで申請を削除し、再度作成してください。')
-                                return
-
-                        else:
-                            pass
-            else:
-                pass                    
-                        
+                                role = discord.utils.find(lambda r: r.name == 'applying', member.guild.roles)
+                                await member.add_roles(role)
+                                await channel.edit(category = channel_qa.guild.get_channel(category_successed_id)
+                                
+                            if emoji == "❎":
+                                humanresource = discord.utils.find(lambda r: r.name == '人事課',member.guild.roles)
+                                await channel_qa.send(f'{member.mention}さん再度申請をする場合は申請を作り直してください。{humanresource.mention}')
+                                await channel.edit(category = channel_qa.guild.get_channel(category_missed_id)
+                                role = discord.utils.find(lambda r: r.name == 'applied', member.guild.roles)
+                                await member.remove_roles(role)
 client.run(TOKEN)
