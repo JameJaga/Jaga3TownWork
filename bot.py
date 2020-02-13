@@ -1,6 +1,9 @@
 import discord
 import asyncio
+import os
 
+
+TOKEN = os.environ.get("DISCORD_TOKEN")
 client = discord.Client()
 category_missed_id = 677069135946973204
 category_successed_id = 677069170260574219
