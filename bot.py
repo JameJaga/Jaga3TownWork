@@ -166,6 +166,7 @@ async def on_message(message):
                                                 return
     if message.content.startswith('/tw-pass'):
         guild = message.guild
+        member = message.author
         resultchannel = client.get_channel(677422931604930591)
         if message.channel.category.id == category_secondtest_id:
             access = discord.utils.get(guild.roles, name="人事課実権")
@@ -188,6 +189,7 @@ async def on_message(message):
         guild = message.guild
         if message.channel.category == category_secondtest_id:
             access = discord.utils.get(guild.roles, name="人事課実権")
+            member = message.author
             if access in member.roles:
                 member = message.mentions[0]
                 await resultchannel.send(f':octagonal_sign::octagonal_sign:{member.mention}が運営試験二次に**不合格**となりました。:octagonal_sign::octagonal_sign:')
