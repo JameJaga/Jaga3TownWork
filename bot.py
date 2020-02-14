@@ -167,10 +167,10 @@ async def on_message(message):
     if message.content.startswith('/tw-pass'):
         guild = message.guild
         resultchannel = client.get_channel(677422931604930591)
-        member = message.mentions[0]
         if message.channel.category.id == category_secondtest_id:
             access = discord.utils.get(guild.roles, name="人事課実権")
             if access in member.roles:
+                member = message.mentions[0]
                 await resultchannel.send(f':tada::tada:{member.mention}が運営試験二次に**合格**運営職に就きます！！！:tada::tada:')
                 channel = message.channel
                 await message.channel.edit(category = channel.guild.get_channel(category_finish_id))
@@ -189,6 +189,7 @@ async def on_message(message):
         if message.channel.category == category_secondtest_id:
             access = discord.utils.get(guild.roles, name="人事課実権")
             if access in member.roles:
+                member = message.mentions[0]
                 await resultchannel.send(f':octagonal_sign::octagonal_sign:{member.mention}が運営試験二次に**不合格**となりました。:octagonal_sign::octagonal_sign:')
                 channel = message.channel
                 await message.channel.edit(category = channel.guild.get_channel(category_finish_id))
