@@ -40,7 +40,7 @@ async def on_message(message):
         send_msg = await channel_qa.send(embed=embed)
         await send_msg.add_reaction('🅰')
         await send_msg.add_reaction('🅱')
-        
+        ################################
         def react_check(reaction,user):
             global send_msg
             emoji = str(reaction.emoji)
@@ -50,7 +50,7 @@ async def on_message(message):
                 return 0
             else:
                 return emoji,user
-
+        ################################
         while not client.is_closed():
             try:
                 reaction,user = await client.wait_for('reaction_add',check=react_check,timeout=7200.0)
@@ -67,12 +67,13 @@ async def on_message(message):
                     applyrole = discord.utils.find(lambda r: r.name == 'Assistant',member.guild.roles)
                     embed = discord.Embed(title="PlzWrite",description = f'申請ランクは{str(applyrole.mention)}\n次に運営としてやりたいことを１メッセージで入力してください。',color=discord.Colour.from_rgb(0, 255, 255))
                     send_msg = await channel_qa.send(embed=embed)
-
+                ######################################
                 def check(msg):
                     if message.author != msg.author:
                         return 0
                     else:
                         return 1
+                ######################################
                 while not client.is_closed():
                     try:
                         msg = await client.wait_for('message',check=check,timeout=7200.0)
@@ -199,5 +200,6 @@ async def on_message(message):
         else:
             embed = discord.Embed(title="AccessDenied",description = 'You can not use this command here',color=discord.Colour.from_rgb(255, 0, 0))
             await message.channel.send(embed=embed)
-
+            
+            
 client.run(TOKEN)
